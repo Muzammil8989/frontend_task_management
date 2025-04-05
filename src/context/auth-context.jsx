@@ -14,6 +14,7 @@ export const AuthProvider = ({ children }) => {
     const checkAuth = async () => {
       try {
         const data = await getProfile();
+
         setUser(data);
       } catch (error) {
         console.error(error);
@@ -29,13 +30,14 @@ export const AuthProvider = ({ children }) => {
     if (user) {
       navigate("/profile");
     }
-  }, [user, navigate]); // Only navigate when user changes and is not null
+  }, [user, navigate]);
 
   const loginUser = async (credentials) => {
     try {
       const data = await login(credentials);
       setUser(data.user);
       toast.success("Logged in successfully!");
+      navigate("/profile");
     } catch (error) {
       toast.error(error.message);
     }

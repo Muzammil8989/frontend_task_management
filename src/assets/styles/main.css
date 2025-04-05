@@ -1,0 +1,54 @@
+body {
+  background: #f8f9fa;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.card {
+  border-radius: 15px;
+  width: 100%;
+  max-width: 600px; /* Increase max-width to allow more space */
+  margin: 20px;
+}
+
+.btn-primary {
+  background-color: #6366f1;
+  border: none;
+  padding: 12px;
+  font-size: 16px;
+  width: 100%;
+}
+
+.btn-primary:hover {
+  background-color: #4f46e5;
+}
+
+.form-control:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.25);
+}
+
+/* Responsive design for smaller screens */
+@media (max-width: 768px) {
+  .card {
+    width: 90%; /* Card takes up 90% of the screen on smaller devices */
+    max-width: 600px; /* Keep the max width larger on small screens */
+  }
+
+  .btn-primary {
+    font-size: 14px;
+    padding: 10px;
+  }
+
+  .form-control {
+    font-size: 16px; /* Ensure the text in inputs is large enough */
+  }
+}
+
+/* Custom width for input fields */
+input.form-control {
+  width: 100%; /* Make sure input fields take up full width */
+  padding: 10px; /* Add some padding for better spacing */
+  font-size: 16px; /* Adjust text size for readability */
+}

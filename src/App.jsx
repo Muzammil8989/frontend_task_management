@@ -7,7 +7,6 @@ import "react-toastify/dist/ReactToastify.css";
 import { AuthProvider } from "./context/auth-context";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./assets/styles/main.css";
-import logo from "./assets/images/logo.png"; // Import the logo
 
 const queryClient = new QueryClient();
 
@@ -18,7 +17,6 @@ const App = () => {
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <div className="app-container">
-            <img src={logo} alt="Logo" className="logo" />
             <ToastContainer position="top-right" autoClose={3000} />
             <AppRoutes />
           </div>

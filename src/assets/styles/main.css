@@ -66,3 +66,19 @@ input.form-control {
 input.form-control:hover {
   border-color: #ced4da;
 }
+.dropdown-menu {
+  min-width: 200px;
+  transition: all 0.2s ease;
+}
+.dropdown-item {
+  padding: 0.5rem 1.5rem;
+}
+.dropdown-item:hover {
+  background-color: #f8f9fa;
+}
+.nav-link {
+  transition: all 0.2s ease;
+}
+.nav-link:hover {
+  opacity: 0.9;
+}

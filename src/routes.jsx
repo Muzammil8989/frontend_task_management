@@ -1,15 +1,23 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Login from "./pages/auth/login/login";
-import SignUp from "./pages/auth/signup/signup";
-import Dashboard from "./pages/dashboard/dashboard";
+import Signup from "./pages/auth/signup/signup";
+import Navbar from "./components/navbar";
+import ProtectedRoute from "./components/protected-route";
 
 const AppRoutes = () => (
   <Routes>
-    <Route path="/login" element={<Login />} />
-    <Route path="/signup" element={<SignUp />} />
     <Route path="/" element={<Login />} />
-    <Route path="/dashboard" element={<Dashboard />} />
+    <Route path="/login" element={<Login />} />
+    <Route path="/signup" element={<Signup />} />
+    <Route
+      path="/profile"
+      element={
+        <ProtectedRoute>
+          <Navbar />
+        </ProtectedRoute>
+      }
+    />
   </Routes>
 );
 

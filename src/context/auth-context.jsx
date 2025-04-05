@@ -1,34 +1,39 @@
-import { createContext, useContext, useState } from "react";
-import { login, logout, register } from "../services/auth-service";
+// src/context/auth-context.js
+import { createContext, useContext, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import { login, logout, register, getProfile } from "../services/auth-service";
 
-// Create the context with default values
-export const AuthContext = createContext({
-  user: null,
-  loginUser: () => {
-    throw new Error("loginUser must be used within an AuthProvider");
-  },
-  logoutUser: () => {
-    throw new Error("logoutUser must be used within an AuthProvider");
-  },
-  registerUser: () => {
-    throw new Error("registerUser must be used within an AuthProvider");
-  },
-});
+const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const data = await getProfile();
+        setUser(data);
+      } catch (error) {
+        console.error(error);
+        setUser(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    checkAuth();
+  }, []);
 
   const loginUser = async (credentials) => {
     try {
       const data = await login(credentials);
       setUser(data.user);
       toast.success("Logged in successfully!");
-      navigate("/dashboard");
+      navigate("/profile");
     } catch (error) {
-      toast.error(error.response?.data?.message || "Login failed!");
+      toast.error(error.message);
     }
   };
 
@@ -39,23 +44,30 @@ export const AuthProvider = ({ children }) => {
       toast.success("Logged out successfully!");
       navigate("/login");
     } catch (error) {
-      toast.error(error.response?.data?.message || "Logout failed!");
+      toast.error(error.message);
     }
   };
 
   const registerUser = async (userData) => {
     try {
-      const data = await register(userData);
-      setUser(data.user);
-      toast.success("Account created successfully!");
+      await register(userData);
+      toast.success("Registration successful!");
       navigate("/login");
     } catch (error) {
-      toast.error(error.response?.data?.message || "Registration failed!");
+      toast.error(error.message);
     }
   };
 
   return (
-    <AuthContext.Provider value={{ user, loginUser, logoutUser, registerUser }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        isLoading,
+        loginUser,
+        logoutUser,
+        registerUser,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
@@ -63,7 +75,7 @@ export const AuthProvider = ({ children }) => {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;

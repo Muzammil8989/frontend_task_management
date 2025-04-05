@@ -16,20 +16,28 @@ export const AuthProvider = ({ children }) => {
       try {
         const data = await getProfile();
         setUser(data);
+        if (window.location.pathname === "/login") {
+          navigate("/profile");
+        }
       } catch (error) {
-        console.error(error);
+        console.log(error);
+        if (window.location.pathname !== "/login") {
+          navigate("/login");
+        }
         setUser(null);
       } finally {
         setIsLoading(false);
       }
     };
     checkAuth();
-  }, []);
+  }, [navigate]);
 
+  // src/context/auth-context.js
   const loginUser = async (credentials) => {
     try {
-      const data = await login(credentials);
-      setUser(data.user);
+      await login(credentials);
+      const profileData = await getProfile();
+      setUser(profileData);
       toast.success("Logged in successfully!");
       navigate("/profile");
     } catch (error) {

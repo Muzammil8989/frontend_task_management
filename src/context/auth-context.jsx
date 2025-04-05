@@ -1,4 +1,3 @@
-// src/context/auth-context.js
 import { createContext, useContext, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -16,30 +15,27 @@ export const AuthProvider = ({ children }) => {
       try {
         const data = await getProfile();
         setUser(data);
-        if (window.location.pathname === "/login") {
-          navigate("/profile");
-        }
       } catch (error) {
-        console.log(error);
-        if (window.location.pathname !== "/login") {
-          navigate("/login");
-        }
+        console.error(error);
         setUser(null);
       } finally {
         setIsLoading(false);
       }
     };
     checkAuth();
-  }, [navigate]);
+  }, []);
 
-  // src/context/auth-context.js
+  useEffect(() => {
+    if (user) {
+      navigate("/profile");
+    }
+  }, [user, navigate]); // Only navigate when user changes and is not null
+
   const loginUser = async (credentials) => {
     try {
-      await login(credentials);
-      const profileData = await getProfile();
-      setUser(profileData);
+      const data = await login(credentials);
+      setUser(data.user);
       toast.success("Logged in successfully!");
-      navigate("/profile");
     } catch (error) {
       toast.error(error.message);
     }

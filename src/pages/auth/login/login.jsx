@@ -1,9 +1,10 @@
-import React from "react";
-import Form from "../../../components/form/form";
+import { useAuth } from "../../../context/auth-context";
 import { useNavigate } from "react-router-dom";
+import Form from "../../../components/form/form";
 
 const Login = () => {
   const navigate = useNavigate();
+  const { loginUser, isLoading } = useAuth();
 
   const fields = [
     {
@@ -29,9 +30,7 @@ const Login = () => {
   ];
 
   const handleSubmit = (data) => {
-    console.log(data);
-    // Add your login logic here
-    navigate("/dashboard");
+    loginUser(data);
   };
 
   return (
@@ -39,8 +38,8 @@ const Login = () => {
       title="Welcome Back"
       fields={fields}
       onSubmit={handleSubmit}
-      submitText="Login"
-      haveAccount={true}
+      submitText={isLoading ? "Logging in..." : "Login"}
+      haveAccount={false}
       onNavigate={() => navigate("/signup")}
       isRegistering={false}
     />

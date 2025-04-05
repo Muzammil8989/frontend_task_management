@@ -1,9 +1,10 @@
-import React from "react";
-import Form from "../../../components/form/form";
+import { useAuth } from "../../../context/auth-context";
 import { useNavigate } from "react-router-dom";
+import Form from "../../../components/form/form";
 
 const SignUp = () => {
   const navigate = useNavigate();
+  const { registerUser, isLoading } = useAuth();
 
   const fields = [
     {
@@ -41,9 +42,7 @@ const SignUp = () => {
   ];
 
   const handleSubmit = (data) => {
-    console.log(data);
-    // Add your signup logic here
-    navigate("/login");
+    registerUser(data);
   };
 
   return (
@@ -51,7 +50,7 @@ const SignUp = () => {
       title="Create Account"
       fields={fields}
       onSubmit={handleSubmit}
-      submitText="Sign Up"
+      submitText={isLoading ? "Registering..." : "Register"}
       haveAccount={false}
       onNavigate={() => navigate("/login")}
       isRegistering={true}

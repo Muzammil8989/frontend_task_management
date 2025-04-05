@@ -52,7 +52,7 @@ const SignUp = () => {
       fields={fields}
       onSubmit={handleSubmit}
       submitText="Sign Up"
-      haveAccount={true}
+      haveAccount={false}
       onNavigate={() => navigate("/login")}
       isRegistering={true}
     />

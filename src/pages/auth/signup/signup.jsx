@@ -8,7 +8,7 @@ const SignUp = () => {
 
   const fields = [
     {
-      name: "name",
+      name: "username",
       label: "Full Name",
       type: "text",
       validation: {

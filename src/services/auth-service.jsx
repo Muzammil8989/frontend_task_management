@@ -24,16 +24,16 @@ export const login = async (credentials) => {
 export const logout = async () => {
   try {
     const response = await axios.post(
-      `${API}/api/v1/auth/logout`,
+      `${API}/api/v1/auth/logout`, // Endpoint for logout
       {},
       {
-        withCredentials: true, // Ensure cookies are sent with the request
+        withCredentials: true, // Ensures cookies are sent with the request
         headers: {
           "Content-Type": "application/json", // Ensures content is sent as JSON
         },
       }
     );
-    return response.data;
+    return response.data; // Successfully logged out
   } catch (error) {
     throw new Error(
       error.response?.data?.message || "Logout failed. Please try again."

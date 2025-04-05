@@ -11,33 +11,28 @@ export const AuthProvider = ({ children }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Check for existing user profile on initial load
     const checkAuth = async () => {
       try {
         const data = await getProfile();
-
-        setUser(data);
+        setUser(data); // Set the user data if the profile is fetched successfully
       } catch (error) {
-        console.error(error);
-        setUser(null);
+        console.error("Error fetching user profile:", error);
+        setUser(null); // If profile fetch fails, set user to null
       } finally {
         setIsLoading(false);
       }
     };
-    checkAuth();
-  }, []);
 
-  useEffect(() => {
-    if (user) {
-      navigate("/profile");
-    }
-  }, [user, navigate]);
+    checkAuth(); // Always check for the user's profile when the app loads
+  }, []); // Empty dependency array ensures this runs only once when the component mounts
 
   const loginUser = async (credentials) => {
     try {
       const data = await login(credentials);
-      setUser(data.user);
+      setUser(data.user); // Set the user after login
       toast.success("Logged in successfully!");
-      navigate("/profile");
+      navigate("/profile"); // Navigate to the profile page after login
     } catch (error) {
       toast.error(error.message);
     }
@@ -46,9 +41,9 @@ export const AuthProvider = ({ children }) => {
   const logoutUser = async () => {
     try {
       await logout();
-      setUser(null);
+      setUser(null); // Clear user data on logout
       toast.success("Logged out successfully!");
-      navigate("/login");
+      navigate("/login"); // Navigate to login page after logout
     } catch (error) {
       toast.error(error.message);
     }
@@ -58,7 +53,7 @@ export const AuthProvider = ({ children }) => {
     try {
       await register(userData);
       toast.success("Registration successful!");
-      navigate("/login");
+      navigate("/login"); // Navigate to login page after registration
     } catch (error) {
       toast.error(error.message);
     }

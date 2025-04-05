@@ -44,16 +44,6 @@ body {
 }
 
 @media (max-width: 768px) {
-  .app-container {
-    padding: 100px 20px 20px;
-  }
-
-  .logo {
-    left: 50%;
-    transform: translateX(-50%);
-    top: 20px;
-  }
-
   .card {
     width: 95%;
     margin: 20px auto;

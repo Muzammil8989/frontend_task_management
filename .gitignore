@@ -1,24 +1,47 @@
+# Node.js
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Build output
+/dist
+/build
+
+# Environment files
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
 # Logs
-logs
 *.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
+logs/
 
-node_modules
-dist
-dist-ssr
-*.local
+# IDE and editor files
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
 
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
+# OS files
 .DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+Thumbs.db
+
+# Coverage folder (for testing tools like Jest)
+coverage/
+
+# Optional: Ignore compiled TypeScript files
+*.tsbuildinfo
+
+# Ignore package lock or yarn lock (only if using yarn or npm alternately)
+# package-lock.json
+# yarn.lock
+
+# Ignore test artifacts
+*.test.js
+*.test.ts
+
+# Public files
+public/
+

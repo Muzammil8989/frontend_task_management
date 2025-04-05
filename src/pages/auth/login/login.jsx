@@ -42,6 +42,7 @@ const Login = () => {
       submitText="Login"
       haveAccount={false}
       onNavigate={() => navigate("/signup")}
+      isRegistering={false}
     />
   );
 };

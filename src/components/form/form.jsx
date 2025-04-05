@@ -1,8 +1,3 @@
-import React, { useState } from "react";
-import { useForm } from "react-hook-form";
-import { motion } from "framer-motion";
-import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
-
 const Form = ({
   title,
   fields,
@@ -10,6 +5,7 @@ const Form = ({
   submitText,
   haveAccount,
   onNavigate,
+  isRegistering, // Add this prop to check if it's a registration form
 }) => {
   const {
     register,
@@ -142,9 +138,12 @@ const Form = ({
                         {errors[field.name].message}
                       </div>
                     )}
-                    {field.name === "password" && watch("password") && (
-                      <PasswordStrength password={watch("password")} />
-                    )}
+                    {/* Render password strength only if it's a registration form */}
+                    {isRegistering &&
+                      field.name === "password" &&
+                      watch("password") && (
+                        <PasswordStrength password={watch("password")} />
+                      )}
                   </div>
                 ))}
 

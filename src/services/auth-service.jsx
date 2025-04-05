@@ -6,7 +6,7 @@ const API = import.meta.env.VITE_BASE_URL;
 // Login API
 export const login = async (credentials) => {
   try {
-    const response = await axios.post(`${API}/auth/login`, credentials, {
+    const response = await axios.post(`${API}/api/v1/auth/login`, credentials, {
       headers: {
         "Content-Type": "application/json", // Ensures content is sent as JSON
       },
@@ -22,7 +22,7 @@ export const login = async (credentials) => {
 // Logout API
 export const logout = async () => {
   try {
-    const response = await axios.get(`${API}/auth/logout`, {
+    const response = await axios.get(`${API}/api/v1/auth/logout`, {
       withCredentials: true,
     });
     return response.data;
@@ -36,7 +36,7 @@ export const logout = async () => {
 // Register API (New)
 export const register = async (userData) => {
   try {
-    const response = await axios.post(`${API}/auth/register`, userData, {
+    const response = await axios.post(`${API}/api/v1/auth/register`, userData, {
       headers: {
         "Content-Type": "application/json", // Ensures content is sent as JSON
       },

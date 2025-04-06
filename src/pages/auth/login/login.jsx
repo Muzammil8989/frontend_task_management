@@ -39,7 +39,7 @@ const Login = () => {
       fields={fields}
       onSubmit={handleSubmit}
       submitText={isLoading ? "Logging in..." : "Login"}
-      haveAccount={false}
+      haveAccount={true}
       onNavigate={() => navigate("/signup")}
       isRegistering={false}
     />

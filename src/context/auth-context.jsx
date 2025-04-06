@@ -23,10 +23,9 @@ export const AuthProvider = ({ children }) => {
   const loginUser = async (credentials) => {
     try {
       await login(credentials);
-      // Invalidate and refetch profile to update user data
       await queryClient.invalidateQueries(["profile"]);
       toast.success("Logged in successfully!");
-      navigate("/profile");
+      navigate("/task");
     } catch (error) {
       toast.error(error.message);
     }

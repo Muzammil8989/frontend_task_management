@@ -4,6 +4,7 @@ import Login from "./pages/auth/login/login";
 import Signup from "./pages/auth/signup/signup";
 import Navbar from "./components/navbar";
 import ProtectedRoute from "./components/protected-route";
+import TaskList from "./pages/task/task";
 
 const AppRoutes = () => (
   <Routes>
@@ -11,10 +12,11 @@ const AppRoutes = () => (
     <Route path="/login" element={<Login />} />
     <Route path="/signup" element={<Signup />} />
     <Route
-      path="/profile"
+      path="/task"
       element={
         <ProtectedRoute>
           <Navbar />
+          <TaskList />
         </ProtectedRoute>
       }
     />

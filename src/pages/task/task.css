@@ -1,0 +1,94 @@
+.task-manager-container {
+  padding: 2rem 0;
+}
+
+.loading-spinner,
+.error-message {
+  text-align: center;
+  padding: 2rem;
+  font-size: 1.2rem;
+}
+
+.modern-task-card {
+  border: none;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  height: 100%;
+  background-color: #fff;
+}
+
+.modern-task-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+}
+
+.completed-task {
+  opacity: 0.8;
+  background-color: #f8f9fa;
+}
+
+.completed-task .task-title,
+.completed-task .task-description {
+  text-decoration: line-through;
+  color: #6c757d;
+}
+
+.task-title {
+  font-weight: 600;
+  color: #343a40;
+  font-size: 1.1rem;
+}
+
+.task-description {
+  color: #495057;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.task-status-badge {
+  font-weight: 500;
+  font-size: 0.75rem;
+  padding: 0.35em 0.65em;
+  border-radius: 50px;
+}
+
+.task-search,
+.status-filter {
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  padding: 0.5rem 1rem;
+}
+
+.task-search:focus,
+.status-filter:focus {
+  border-color: #86b7fe;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.1);
+}
+
+.custom-pagination .page-item .page-link {
+  border: none;
+  color: #495057;
+  border-radius: 6px;
+  margin: 0 4px;
+}
+
+.custom-pagination .page-item.active .page-link {
+  background-color: #0d6efd;
+  color: white;
+}
+
+.custom-pagination .page-item:not(.active) .page-link:hover {
+  background-color: #f8f9fa;
+}
+
+.task-actions .btn {
+  border-radius: 6px;
+  font-size: 0.85rem;
+  padding: 0.25rem 0.75rem;
+  font-weight: 500;
+}
+
+.task-dates {
+  font-size: 0.8rem;
+}

@@ -7,6 +7,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { AuthProvider } from "./context/auth-context";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./assets/styles/main.css";
+import "animate.css";
 
 const queryClient = new QueryClient();
 

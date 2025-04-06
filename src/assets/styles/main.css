@@ -82,3 +82,11 @@ input.form-control:hover {
 .nav-link:hover {
   opacity: 0.9;
 }
+.task-card {
+  transition: transform 0.2s ease-in-out;
+}
+
+.task-card:hover {
+  transform: rotate(0deg) scale(1.02) !important;
+  z-index: 1;
+}

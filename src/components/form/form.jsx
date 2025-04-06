@@ -80,7 +80,7 @@ const Form = ({
       variants={formVariants}
       transition={{ duration: 0.3 }}
       className="container d-flex flex-column justify-content-center"
-      style={{ minHeight: "100vh" }}
+      style={{ minHeight: "90vh" }}
     >
       <div className="row justify-content-center">
         <div className="col-12">

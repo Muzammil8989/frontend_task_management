@@ -12,7 +12,19 @@ import {
   Badge,
   Modal,
   Spinner,
+  Toast,
 } from "react-bootstrap";
+import {
+  FaSearch,
+  FaPlus,
+  FaEdit,
+  FaTrash,
+  FaCheck,
+  FaArrowRight,
+  FaTimes,
+  FaCheckCircle,
+  FaSpinner,
+} from "react-icons/fa";
 import "./task.css";
 
 export const useTasks = (params) => {
@@ -31,6 +43,8 @@ const TaskList = () => {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [editingTask, setEditingTask] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
   const [editedData, setEditedData] = useState({
     title: "",
     description: "",
@@ -54,13 +68,24 @@ const TaskList = () => {
     search: debouncedSearch,
   });
 
-  // Mutations
+  const showSuccessToast = (message) => {
+    setToastMessage(message);
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 3000);
+  };
+
+  // Mutations with toast notifications
   const createTaskMutation = useMutation({
     mutationFn: (newTask) => taskService.createTask(newTask),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
       setShowCreateModal(false);
       setEditedData({ title: "", description: "", status: "To Do" });
+      showSuccessToast("Task created successfully!");
+    },
+    onError: () => {
+      setToastMessage("Failed to create task");
+      setShowToast(true);
     },
   });
 
@@ -70,6 +95,11 @@ const TaskList = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
       setEditingTask(null);
+      showSuccessToast("Task updated successfully!");
+    },
+    onError: () => {
+      setToastMessage("Failed to update task");
+      setShowToast(true);
     },
   });
 
@@ -77,6 +107,11 @@ const TaskList = () => {
     mutationFn: (taskId) => taskService.deleteTask(taskId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      showSuccessToast("Task deleted successfully!");
+    },
+    onError: () => {
+      setToastMessage("Failed to delete task");
+      setShowToast(true);
     },
   });
 
@@ -136,24 +171,59 @@ const TaskList = () => {
     }
   };
 
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case "Done":
+        return <FaCheckCircle className="me-1" />;
+      case "In Progress":
+        return <FaSpinner className="me-1 spin" />;
+      default:
+        return <FaArrowRight className="me-1" />;
+    }
+  };
+
   if (isLoading)
     return (
       <div className="loading-spinner">
-        <Spinner animation="border" />
+        <Spinner animation="border" variant="primary" />
+        <span className="ms-2">Loading tasks...</span>
       </div>
     );
-  if (isError) return <div className="error-message">Error fetching tasks</div>;
+
+  if (isError)
+    return (
+      <div className="error-message text-danger p-3 bg-light rounded">
+        <FaTimes className="me-2" />
+        Error fetching tasks. Please try again.
+      </div>
+    );
 
   return (
     <Container className="task-manager-container">
+      {/* Success Toast Notification */}
+      <Toast
+        show={showToast}
+        onClose={() => setShowToast(false)}
+        className="position-fixed top-0 end-0 m-3"
+        bg="success"
+        delay={3000}
+        autohide
+      >
+        <Toast.Header closeButton={false}>
+          <strong className="me-auto">Success</strong>
+        </Toast.Header>
+        <Toast.Body className="text-white">{toastMessage}</Toast.Body>
+      </Toast>
+
       {/* Search, Filters and Create Button */}
       <div className="task-controls mb-4">
         <div className="d-flex flex-column flex-md-row gap-3">
-          <div className="flex-grow-1">
+          <div className="flex-grow-1 position-relative">
+            <FaSearch className="position-absolute top-50 start-0 translate-middle-y ms-3 text-muted" />
             <Form.Control
               type="search"
-              placeholder="🔍 Search tasks..."
-              className="task-search shadow-sm"
+              placeholder="Search tasks..."
+              className="task-search shadow-sm ps-5"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -176,8 +246,9 @@ const TaskList = () => {
           <Button
             variant="primary"
             onClick={() => setShowCreateModal(true)}
-            className="create-task-btn"
+            className="create-task-btn d-flex align-items-center"
           >
+            <FaPlus className="me-2" />
             Create Task
           </Button>
         </div>
@@ -194,13 +265,15 @@ const TaskList = () => {
             >
               <Card.Body className="task-card-body">
                 <div className="d-flex justify-content-between align-items-start mb-2">
-                  <Card.Title className="task-title mb-0">
+                  <Card.Title className="task-title mb-0 text-truncate">
                     {task.title}
                   </Card.Title>
                   <Badge
+                    pill
                     bg={getStatusColor(task.status)}
-                    className="task-status-badge"
+                    className="task-status-badge d-flex align-items-center"
                   >
+                    {getStatusIcon(task.status)}
                     {task.status}
                   </Badge>
                 </div>
@@ -217,7 +290,9 @@ const TaskList = () => {
                 </div>
 
                 <Card.Text className="task-description mb-3">
-                  {task.description}
+                  {task.description || (
+                    <span className="text-muted">No description</span>
+                  )}
                 </Card.Text>
 
                 <div className="task-actions d-flex justify-content-between align-items-center">
@@ -226,14 +301,24 @@ const TaskList = () => {
                       <Button
                         variant="outline-success"
                         size="sm"
-                        className="me-2"
+                        className="me-2 d-flex align-items-center"
                         onClick={() => handleStatusUpdate(task)}
                         disabled={updateTaskMutation.isPending}
                       >
                         {updateTaskMutation.isPending ? (
-                          <Spinner animation="border" size="sm" />
+                          <>
+                            <Spinner
+                              animation="border"
+                              size="sm"
+                              className="me-2"
+                            />
+                            Updating...
+                          </>
                         ) : (
-                          "Complete"
+                          <>
+                            <FaCheck className="me-1" />
+                            Complete
+                          </>
                         )}
                       </Button>
                     )}
@@ -242,20 +327,34 @@ const TaskList = () => {
                     <Button
                       variant="outline-primary"
                       size="sm"
+                      className="d-flex align-items-center"
                       onClick={() => handleEditClick(task)}
+                      disabled={updateTaskMutation.isPending}
                     >
+                      <FaEdit className="me-1" />
                       Edit
                     </Button>
                     <Button
                       variant="outline-danger"
                       size="sm"
+                      className="d-flex align-items-center"
                       onClick={() => handleDelete(task._id)}
                       disabled={deleteTaskMutation.isPending}
                     >
                       {deleteTaskMutation.isPending ? (
-                        <Spinner animation="border" size="sm" />
+                        <>
+                          <Spinner
+                            animation="border"
+                            size="sm"
+                            className="me-2"
+                          />
+                          Deleting...
+                        </>
                       ) : (
-                        "Delete"
+                        <>
+                          <FaTrash className="me-1" />
+                          Delete
+                        </>
                       )}
                     </Button>
                   </div>
@@ -267,8 +366,8 @@ const TaskList = () => {
       </Row>
 
       {/* Edit Modal */}
-      <Modal show={!!editingTask} onHide={() => setEditingTask(null)}>
-        <Modal.Header closeButton>
+      <Modal show={!!editingTask} onHide={() => setEditingTask(null)} centered>
+        <Modal.Header closeButton className="border-0 pb-0">
           <Modal.Title>Edit Task</Modal.Title>
         </Modal.Header>
         <Modal.Body>
@@ -280,6 +379,7 @@ const TaskList = () => {
                 name="title"
                 value={editedData.title}
                 onChange={handleInputChange}
+                className="modern-input"
               />
             </Form.Group>
             <Form.Group className="mb-3">
@@ -290,6 +390,7 @@ const TaskList = () => {
                 name="description"
                 value={editedData.description}
                 onChange={handleInputChange}
+                className="modern-input"
               />
             </Form.Group>
             <Form.Group className="mb-3">
@@ -298,6 +399,7 @@ const TaskList = () => {
                 name="status"
                 value={editedData.status}
                 onChange={handleInputChange}
+                className="modern-input"
               >
                 <option value="To Do">To Do</option>
                 <option value="In Progress">In Progress</option>
@@ -306,17 +408,25 @@ const TaskList = () => {
             </Form.Group>
           </Form>
         </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setEditingTask(null)}>
+        <Modal.Footer className="border-0 pt-0">
+          <Button
+            variant="light"
+            onClick={() => setEditingTask(null)}
+            className="px-4"
+          >
             Cancel
           </Button>
           <Button
             variant="primary"
             onClick={handleUpdateTask}
             disabled={updateTaskMutation.isPending}
+            className="px-4 d-flex align-items-center"
           >
             {updateTaskMutation.isPending ? (
-              <Spinner animation="border" size="sm" className="me-2" />
+              <>
+                <Spinner animation="border" size="sm" className="me-2" />
+                Saving...
+              </>
             ) : (
               "Save Changes"
             )}
@@ -325,8 +435,12 @@ const TaskList = () => {
       </Modal>
 
       {/* Create Task Modal */}
-      <Modal show={showCreateModal} onHide={() => setShowCreateModal(false)}>
-        <Modal.Header closeButton>
+      <Modal
+        show={showCreateModal}
+        onHide={() => setShowCreateModal(false)}
+        centered
+      >
+        <Modal.Header closeButton className="border-0 pb-0">
           <Modal.Title>Create New Task</Modal.Title>
         </Modal.Header>
         <Modal.Body>
@@ -339,6 +453,7 @@ const TaskList = () => {
                 value={editedData.title}
                 onChange={handleInputChange}
                 placeholder="Enter task title"
+                className="modern-input"
               />
             </Form.Group>
             <Form.Group className="mb-3">
@@ -350,6 +465,7 @@ const TaskList = () => {
                 value={editedData.description}
                 onChange={handleInputChange}
                 placeholder="Enter task description"
+                className="modern-input"
               />
             </Form.Group>
             <Form.Group className="mb-3">
@@ -358,6 +474,7 @@ const TaskList = () => {
                 name="status"
                 value={editedData.status}
                 onChange={handleInputChange}
+                className="modern-input"
               >
                 <option value="To Do">To Do</option>
                 <option value="In Progress">In Progress</option>
@@ -366,17 +483,25 @@ const TaskList = () => {
             </Form.Group>
           </Form>
         </Modal.Body>
-        <Modal.Footer>
-          <Button variant="primary" onClick={() => setShowCreateModal(false)}>
+        <Modal.Footer className="border-0 pt-0">
+          <Button
+            variant="light"
+            onClick={() => setShowCreateModal(false)}
+            className="px-4"
+          >
             Cancel
           </Button>
           <Button
             variant="primary"
             onClick={handleCreateTask}
             disabled={createTaskMutation.isPending}
+            className="px-4 d-flex align-items-center"
           >
             {createTaskMutation.isPending ? (
-              <Spinner animation="border" size="sm" className="me-2" />
+              <>
+                <Spinner animation="border" size="sm" className="me-2" />
+                Creating...
+              </>
             ) : (
               "Create Task"
             )}
@@ -391,7 +516,9 @@ const TaskList = () => {
             <Pagination.Prev
               disabled={page === 1}
               onClick={() => setPage((p) => Math.max(1, p - 1))}
-            />
+            >
+              Previous
+            </Pagination.Prev>
             {Array.from({ length: data.totalPages }, (_, i) => (
               <Pagination.Item
                 key={i + 1}
@@ -404,7 +531,9 @@ const TaskList = () => {
             <Pagination.Next
               disabled={page === data.totalPages}
               onClick={() => setPage((p) => Math.min(data.totalPages, p + 1))}
-            />
+            >
+              Next
+            </Pagination.Next>
           </Pagination>
         </div>
       )}

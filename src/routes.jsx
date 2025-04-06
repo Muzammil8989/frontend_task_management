@@ -7,20 +7,23 @@ import ProtectedRoute from "./components/protected-route";
 import TaskList from "./pages/task/task";
 
 const AppRoutes = () => (
-  <Routes>
-    <Route path="/" element={<Login />} />
-    <Route path="/login" element={<Login />} />
-    <Route path="/signup" element={<Signup />} />
-    <Route
-      path="/task"
-      element={
-        <ProtectedRoute>
-          <Navbar />
-          <TaskList />
-        </ProtectedRoute>
-      }
-    />
-  </Routes>
+  <>
+    {" "}
+    <Navbar />
+    <Routes>
+      <Route path="/" element={<Login />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/signup" element={<Signup />} />
+      <Route
+        path="/task"
+        element={
+          <ProtectedRoute>
+            <TaskList />
+          </ProtectedRoute>
+        }
+      />
+    </Routes>
+  </>
 );
 
 export default AppRoutes;

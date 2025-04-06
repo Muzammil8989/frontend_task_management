@@ -265,7 +265,13 @@ const TaskList = () => {
             >
               <Card.Body className="task-card-body">
                 <div className="d-flex justify-content-between align-items-start mb-2">
-                  <Card.Title className="task-title mb-0 text-truncate">
+                  <Card.Title
+                    className={`task-title mb-0 text-truncate ${
+                      task.status === "Done"
+                        ? "text-decoration-line-through text-muted"
+                        : ""
+                    }`}
+                  >
                     {task.title}
                   </Card.Title>
                   <Badge
@@ -289,7 +295,13 @@ const TaskList = () => {
                   )}
                 </div>
 
-                <Card.Text className="task-description mb-3">
+                <Card.Text
+                  className={`task-description mb-3 ${
+                    task.status === "Done"
+                      ? "text-decoration-line-through text-muted"
+                      : ""
+                  }`}
+                >
                   {task.description || (
                     <span className="text-muted">No description</span>
                   )}

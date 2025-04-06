@@ -13,6 +13,7 @@ import {
   Modal,
   Spinner,
   Toast,
+  Alert,
 } from "react-bootstrap";
 import {
   FaSearch,
@@ -24,6 +25,7 @@ import {
   FaTimes,
   FaCheckCircle,
   FaSpinner,
+  FaExclamationTriangle,
 } from "react-icons/fa";
 import "./task.css";
 
@@ -45,6 +47,8 @@ const TaskList = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [taskToDelete, setTaskToDelete] = useState(null);
   const [editedData, setEditedData] = useState({
     title: "",
     description: "",
@@ -107,6 +111,7 @@ const TaskList = () => {
     mutationFn: (taskId) => taskService.deleteTask(taskId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      setShowDeleteModal(false);
       showSuccessToast("Task deleted successfully!");
     },
     onError: () => {
@@ -145,6 +150,18 @@ const TaskList = () => {
     createTaskMutation.mutate(editedData);
   };
 
+  // Delete handlers
+  const handleDeleteClick = (task) => {
+    setTaskToDelete(task);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = () => {
+    if (taskToDelete) {
+      deleteTaskMutation.mutate(taskToDelete._id);
+    }
+  };
+
   // Status handlers
   const handleStatusUpdate = (task) => {
     const statusOrder = ["To Do", "In Progress", "Done"];
@@ -152,12 +169,6 @@ const TaskList = () => {
     const newStatus = statusOrder[(currentIndex + 1) % statusOrder.length];
 
     updateTaskMutation.mutate({ ...task, status: newStatus });
-  };
-
-  const handleDelete = (taskId) => {
-    if (window.confirm("Are you sure you want to delete this task?")) {
-      deleteTaskMutation.mutate(taskId);
-    }
   };
 
   const getStatusColor = (status) => {
@@ -350,24 +361,11 @@ const TaskList = () => {
                       variant="outline-danger"
                       size="sm"
                       className="d-flex align-items-center"
-                      onClick={() => handleDelete(task._id)}
+                      onClick={() => handleDeleteClick(task)}
                       disabled={deleteTaskMutation.isPending}
                     >
-                      {deleteTaskMutation.isPending ? (
-                        <>
-                          <Spinner
-                            animation="border"
-                            size="sm"
-                            className="me-2"
-                          />
-                          Deleting...
-                        </>
-                      ) : (
-                        <>
-                          <FaTrash className="me-1" />
-                          Delete
-                        </>
-                      )}
+                      <FaTrash className="me-1" />
+                      Delete
                     </Button>
                   </div>
                 </div>
@@ -516,6 +514,53 @@ const TaskList = () => {
               </>
             ) : (
               "Create Task"
+            )}
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        show={showDeleteModal}
+        onHide={() => setShowDeleteModal(false)}
+        centered
+      >
+        <Modal.Header closeButton className="border-0 pb-0">
+          <Modal.Title className="d-flex align-items-center">
+            <FaExclamationTriangle className="text-danger me-2" />
+            Confirm Deletion
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Alert variant="danger" className="mb-0">
+            <p>
+              Are you sure you want to delete the task{" "}
+              <strong>"{taskToDelete?.title}"</strong>? This action cannot be
+              undone.
+            </p>
+          </Alert>
+        </Modal.Body>
+        <Modal.Footer className="border-0 pt-0">
+          <Button
+            variant="light"
+            onClick={() => setShowDeleteModal(false)}
+            className="px-4"
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="danger"
+            onClick={confirmDelete}
+            disabled={deleteTaskMutation.isPending}
+            className="px-4 d-flex align-items-center"
+          >
+            {deleteTaskMutation.isPending ? (
+              <>
+                <Spinner animation="border" size="sm" className="me-2" />
+                Deleting...
+              </>
+            ) : (
+              "Delete Task"
             )}
           </Button>
         </Modal.Footer>

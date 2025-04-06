@@ -61,25 +61,13 @@ export const getProfile = async () => {
   try {
     const response = await axios.get(`${API}/api/v1/auth/profile`, {
       withCredentials: true, // Ensure cookies are sent with the request
-      headers: {
-        "Content-Type": "application/json", // Ensures content is sent as JSON
-      },
     });
+    console.log(response.data);
     return response.data;
   } catch (error) {
-    // Network or response errors
-    if (error.response) {
-      // Server responded with an error
-      throw new Error(
-        error.response?.data?.message ||
-          "Profile fetch failed. Please try again."
-      );
-    } else if (error.request) {
-      // No response received from server
-      throw new Error("No response from server. Please check your connection.");
-    } else {
-      // Something else went wrong while setting up the request
-      throw new Error(`Request error: ${error.message}`);
-    }
+    throw new Error(
+      error.response?.data?.message ||
+        "Failed to fetch profile. Please try again."
+    );
   }
 };

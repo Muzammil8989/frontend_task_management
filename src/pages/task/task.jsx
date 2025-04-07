@@ -47,7 +47,7 @@ const TaskList = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
-  const [toastVariant, setToastVariant] = useState("success"); // 'success' or 'danger'
+  const [toastVariant, setToastVariant] = useState("success");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState(null);
   const [editedData, setEditedData] = useState({
@@ -60,7 +60,7 @@ const TaskList = () => {
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearch(searchQuery);
-      setPage(1); // Reset to first page when search changes
+      setPage(1);
     }, 500);
 
     return () => clearTimeout(handler);
@@ -80,7 +80,7 @@ const TaskList = () => {
     setTimeout(() => setShowToast(false), 3000);
   };
 
-  // Mutations with toast notifications
+  // Mutations
   const createTaskMutation = useMutation({
     mutationFn: (newTask) => taskService.createTask(newTask),
     onSuccess: () => {
@@ -127,7 +127,8 @@ const TaskList = () => {
       );
     },
   });
-  // Edit handlers
+
+  // Handlers
   const handleEditClick = (task) => {
     setEditingTask(task);
     setEditedData({
@@ -157,7 +158,6 @@ const TaskList = () => {
     createTaskMutation.mutate(editedData);
   };
 
-  // Delete handlers
   const handleDeleteClick = (task) => {
     setTaskToDelete(task);
     setShowDeleteModal(true);
@@ -169,13 +169,8 @@ const TaskList = () => {
     }
   };
 
-  // Status handlers
   const handleStatusUpdate = (task) => {
-    const statusOrder = ["To Do", "In Progress", "Done"];
-    const currentIndex = statusOrder.indexOf(task.status);
-    const newStatus = statusOrder[(currentIndex + 1) % statusOrder.length];
-
-    updateTaskMutation.mutate({ ...task, status: newStatus });
+    updateTaskMutation.mutate({ ...task, status: "Done" });
   };
 
   const getStatusColor = (status) => {
@@ -200,124 +195,44 @@ const TaskList = () => {
     }
   };
 
-  if (isLoading)
+  if (isLoading) {
     return (
       <div className="loading-spinner">
         <Spinner animation="border" variant="primary" />
         <span className="ms-2">Loading tasks...</span>
       </div>
     );
+  }
 
-  if (isError)
+  if (isError) {
     return (
       <div className="error-message text-danger p-3 bg-light rounded">
         <FaTimes className="me-2" />
         Error fetching tasks. Please try again.
       </div>
     );
-
-  if (!isLoading && !isError && data?.tasks?.length === 0) {
-    return (
-      <Container className="task-manager-container">
-        {/* Success Toast Notification */}
-        <Toast
-          show={showToast}
-          onClose={() => setShowToast(false)}
-          className="position-fixed top-0 end-0 m-3"
-          bg={toastVariant}
-          delay={3000}
-          autohide
-        >
-          <Toast.Header closeButton={false}>
-            <strong className="me-auto">
-              {toastVariant === "success" ? "Success" : "Error"}
-            </strong>
-          </Toast.Header>
-          <Toast.Body className="text-white">{toastMessage}</Toast.Body>
-        </Toast>
-
-        <div className="task-controls mb-4">
-          <div className="d-flex flex-column flex-md-row gap-3">
-            <div className="flex-grow-1 position-relative">
-              <FaSearch className="position-absolute top-50 start-0 translate-middle-y ms-3 text-muted" />
-              <Form.Control
-                type="search"
-                placeholder="Search tasks..."
-                className="task-search shadow-sm ps-5"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-            <div style={{ width: "200px" }}>
-              <Form.Select
-                className="status-filter shadow-sm"
-                value={statusFilter}
-                onChange={(e) => {
-                  setStatusFilter(e.target.value);
-                  setPage(1);
-                }}
-              >
-                <option value="">All Statuses</option>
-                <option>To Do</option>
-                <option>In Progress</option>
-                <option>Done</option>
-              </Form.Select>
-            </div>
-            <Button
-              variant="primary"
-              onClick={() => setShowCreateModal(true)}
-              className="create-task-btn d-flex align-items-center"
-            >
-              <FaPlus className="me-2" />
-              Create Task
-            </Button>
-          </div>
-        </div>
-
-        <div className="no-records-found text-center py-5">
-          <FaSearch className="display-4 text-muted mb-3" />
-          <h4>No tasks found</h4>
-          <p className="text-muted">
-            {debouncedSearch || statusFilter
-              ? "No tasks match your search or filter criteria"
-              : "You don't have any tasks yet"}
-          </p>
-          <Button
-            variant="primary"
-            onClick={() => {
-              setSearchQuery("");
-              setStatusFilter("");
-              setPage(1);
-            }}
-            className="mt-3"
-          >
-            {debouncedSearch || statusFilter
-              ? "Clear filters"
-              : "Create a task"}
-          </Button>
-        </div>
-      </Container>
-    );
   }
 
   return (
     <Container className="task-manager-container">
-      {/* Success Toast Notification */}
+      {/* Toast Notification */}
       <Toast
         show={showToast}
         onClose={() => setShowToast(false)}
         className="position-fixed top-0 end-0 m-3"
-        bg="success"
+        bg={toastVariant}
         delay={3000}
         autohide
       >
         <Toast.Header closeButton={false}>
-          <strong className="me-auto">Success</strong>
+          <strong className="me-auto">
+            {toastVariant === "success" ? "Success" : "Error"}
+          </strong>
         </Toast.Header>
         <Toast.Body className="text-white">{toastMessage}</Toast.Body>
       </Toast>
 
-      {/* Search, Filters and Create Button */}
+      {/* Controls Section */}
       <div className="task-controls mb-4">
         <div className="d-flex flex-column flex-md-row gap-3">
           <div className="flex-grow-1 position-relative">
@@ -356,153 +271,213 @@ const TaskList = () => {
         </div>
       </div>
 
-      {/* Tasks Grid */}
-      <Row xs={1} md={2} lg={3} className="g-4 task-grid">
-        {data?.tasks?.map((task) => (
-          <Col key={task._id} className="task-col">
-            <Card
-              className={`modern-task-card ${
-                task.status === "Done" ? "completed-task" : ""
-              }`}
-            >
-              <Card.Body className="task-card-body">
-                <div className="d-flex justify-content-between align-items-start mb-2">
-                  <Card.Title
-                    className={`task-title mb-0 text-truncate ${
-                      task.status === "Done"
-                        ? "text-decoration-line-through text-muted"
-                        : ""
-                    }`}
-                  >
-                    {task.title}
-                  </Card.Title>
-                  <Badge
-                    pill
-                    bg={getStatusColor(task.status)}
-                    className="task-status-badge d-flex align-items-center"
-                  >
-                    {getStatusIcon(task.status)}
-                    {task.status}
-                  </Badge>
-                </div>
-
-                <div className="task-dates mb-3">
-                  <small className="text-muted">
-                    Created: {new Date(task.createdAt).toLocaleDateString()}
-                  </small>
-                  {task.updatedAt !== task.createdAt && (
-                    <small className="text-muted ms-2">
-                      Updated: {new Date(task.updatedAt).toLocaleDateString()}
-                    </small>
-                  )}
-                </div>
-
-                <Card.Text
-                  className={`task-description mb-3 ${
-                    task.status === "Done"
-                      ? "text-decoration-line-through text-muted"
-                      : ""
+      {/* Content Section */}
+      {data?.tasks?.length === 0 ? (
+        <div className="no-records-found text-center py-5">
+          <FaSearch className="display-4 text-muted mb-3" />
+          <h4>No tasks found</h4>
+          <p className="text-muted">
+            {debouncedSearch || statusFilter
+              ? "No tasks match your search or filter criteria"
+              : "You don't have any tasks yet"}
+          </p>
+          <Button
+            variant="primary"
+            onClick={() => {
+              setSearchQuery("");
+              setStatusFilter("");
+              setPage(1);
+              setShowCreateModal(true);
+            }}
+            className="mt-3"
+          >
+            {debouncedSearch || statusFilter
+              ? "Clear filters and create task"
+              : "Create your first task"}
+          </Button>
+        </div>
+      ) : (
+        <>
+          <Row xs={1} md={2} lg={3} className="g-4 task-grid">
+            {data?.tasks?.map((task) => (
+              <Col key={task._id} className="task-col">
+                <Card
+                  className={`modern-task-card ${
+                    task.status === "Done" ? "completed-task" : ""
                   }`}
                 >
-                  {task.description || (
-                    <span className="text-muted">No description</span>
-                  )}
-                </Card.Text>
-
-                <div className="task-actions d-flex justify-content-between align-items-center">
-                  <div>
-                    {task.status !== "Done" && (
-                      <Button
-                        variant="outline-success"
-                        size="sm"
-                        className="me-2 d-flex align-items-center"
-                        onClick={() => handleStatusUpdate(task)}
-                        disabled={
-                          updateTaskMutation.isPending &&
-                          updateTaskMutation.variables?._id === task._id
-                        }
+                  <Card.Body className="task-card-body">
+                    <div className="d-flex justify-content-between align-items-start mb-2">
+                      <Card.Title
+                        className={`task-title mb-0 text-truncate ${
+                          task.status === "Done"
+                            ? "text-decoration-line-through text-muted"
+                            : ""
+                        }`}
                       >
-                        {updateTaskMutation.isPending &&
-                        updateTaskMutation.variables?._id === task._id ? (
-                          <>
-                            <Spinner
-                              animation="border"
-                              size="sm"
-                              className="me-2"
-                            />
-                            Updating...
-                          </>
-                        ) : (
-                          <>
-                            <FaCheck className="me-1" />
-                            Complete
-                          </>
+                        {task.title}
+                      </Card.Title>
+                      <Badge
+                        pill
+                        bg={getStatusColor(task.status)}
+                        className="task-status-badge d-flex align-items-center"
+                      >
+                        {getStatusIcon(task.status)}
+                        {task.status}
+                      </Badge>
+                    </div>
+
+                    <div className="task-dates mb-3">
+                      <small className="text-muted">
+                        Created: {new Date(task.createdAt).toLocaleDateString()}
+                      </small>
+                      {task.updatedAt !== task.createdAt && (
+                        <small className="text-muted ms-2">
+                          Updated:{" "}
+                          {new Date(task.updatedAt).toLocaleDateString()}
+                        </small>
+                      )}
+                    </div>
+
+                    <Card.Text
+                      className={`task-description mb-3 ${
+                        task.status === "Done"
+                          ? "text-decoration-line-through text-muted"
+                          : ""
+                      }`}
+                    >
+                      {task.description || (
+                        <span className="text-muted">No description</span>
+                      )}
+                    </Card.Text>
+
+                    <div className="task-actions d-flex justify-content-between align-items-center">
+                      <div>
+                        {task.status !== "Done" && (
+                          <Button
+                            variant="outline-success"
+                            size="sm"
+                            className="me-2 d-flex align-items-center"
+                            onClick={() => handleStatusUpdate(task)}
+                            disabled={
+                              updateTaskMutation.isPending &&
+                              updateTaskMutation.variables?._id === task._id
+                            }
+                          >
+                            {updateTaskMutation.isPending &&
+                            updateTaskMutation.variables?._id === task._id ? (
+                              <>
+                                <Spinner
+                                  animation="border"
+                                  size="sm"
+                                  className="me-2"
+                                />
+                                Updating...
+                              </>
+                            ) : (
+                              <>
+                                <FaCheck className="me-1" />
+                                Complete
+                              </>
+                            )}
+                          </Button>
                         )}
-                      </Button>
-                    )}
-                  </div>
-                  <div className="d-flex gap-2">
-                    <Button
-                      variant="outline-primary"
-                      size="sm"
-                      className="d-flex align-items-center"
-                      onClick={() => handleEditClick(task)}
-                      disabled={
-                        updateTaskMutation.isPending &&
-                        updateTaskMutation.variables?._id === task._id
-                      }
-                    >
-                      {updateTaskMutation.isPending &&
-                      updateTaskMutation.variables?._id === task._id ? (
-                        <>
-                          <Spinner
-                            animation="border"
-                            size="sm"
-                            className="me-2"
-                          />
-                          Editing...
-                        </>
-                      ) : (
-                        <>
-                          <FaEdit className="me-1" />
-                          Edit
-                        </>
-                      )}
-                    </Button>
-                    <Button
-                      variant="outline-danger"
-                      size="sm"
-                      className="d-flex align-items-center"
-                      onClick={() => handleDeleteClick(task)}
-                      disabled={
-                        deleteTaskMutation.isPending &&
-                        deleteTaskMutation.variables === task._id
-                      }
-                    >
-                      {deleteTaskMutation.isPending &&
-                      deleteTaskMutation.variables === task._id ? (
-                        <>
-                          <Spinner
-                            animation="border"
-                            size="sm"
-                            className="me-2"
-                          />
-                          Deleting...
-                        </>
-                      ) : (
-                        <>
-                          <FaTrash className="me-1" />
-                          Delete
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </div>
-              </Card.Body>
-            </Card>
-          </Col>
-        ))}
-      </Row>
+                      </div>
+                      <div className="d-flex gap-2">
+                        <Button
+                          variant="outline-primary"
+                          size="sm"
+                          className="d-flex align-items-center"
+                          onClick={() => handleEditClick(task)}
+                          disabled={
+                            updateTaskMutation.isPending &&
+                            updateTaskMutation.variables?._id === task._id
+                          }
+                        >
+                          {updateTaskMutation.isPending &&
+                          updateTaskMutation.variables?._id === task._id ? (
+                            <>
+                              <Spinner
+                                animation="border"
+                                size="sm"
+                                className="me-2"
+                              />
+                              Editing...
+                            </>
+                          ) : (
+                            <>
+                              <FaEdit className="me-1" />
+                              Edit
+                            </>
+                          )}
+                        </Button>
+                        <Button
+                          variant="outline-danger"
+                          size="sm"
+                          className="d-flex align-items-center"
+                          onClick={() => handleDeleteClick(task)}
+                          disabled={
+                            deleteTaskMutation.isPending &&
+                            deleteTaskMutation.variables === task._id
+                          }
+                        >
+                          {deleteTaskMutation.isPending &&
+                          deleteTaskMutation.variables === task._id ? (
+                            <>
+                              <Spinner
+                                animation="border"
+                                size="sm"
+                                className="me-2"
+                              />
+                              Deleting...
+                            </>
+                          ) : (
+                            <>
+                              <FaTrash className="me-1" />
+                              Delete
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                  </Card.Body>
+                </Card>
+              </Col>
+            ))}
+          </Row>
+
+          {/* Pagination */}
+          {data?.totalPages > 1 && (
+            <div className="mt-4 d-flex justify-content-center">
+              <Pagination className="custom-pagination">
+                <Pagination.Prev
+                  disabled={page === 1}
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                >
+                  Previous
+                </Pagination.Prev>
+                {Array.from({ length: data.totalPages }, (_, i) => (
+                  <Pagination.Item
+                    key={i + 1}
+                    active={i + 1 === page}
+                    onClick={() => setPage(i + 1)}
+                  >
+                    {i + 1}
+                  </Pagination.Item>
+                ))}
+                <Pagination.Next
+                  disabled={page === data.totalPages}
+                  onClick={() =>
+                    setPage((p) => Math.min(data.totalPages, p + 1))
+                  }
+                >
+                  Next
+                </Pagination.Next>
+              </Pagination>
+            </div>
+          )}
+        </>
+      )}
 
       {/* Edit Modal */}
       <Modal show={!!editingTask} onHide={() => setEditingTask(null)} centered>
@@ -694,35 +669,6 @@ const TaskList = () => {
           </Button>
         </Modal.Footer>
       </Modal>
-
-      {/* Pagination */}
-      {data?.totalPages > 1 && (
-        <div className="mt-4 d-flex justify-content-center">
-          <Pagination className="custom-pagination">
-            <Pagination.Prev
-              disabled={page === 1}
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-            >
-              Previous
-            </Pagination.Prev>
-            {Array.from({ length: data.totalPages }, (_, i) => (
-              <Pagination.Item
-                key={i + 1}
-                active={i + 1 === page}
-                onClick={() => setPage(i + 1)}
-              >
-                {i + 1}
-              </Pagination.Item>
-            ))}
-            <Pagination.Next
-              disabled={page === data.totalPages}
-              onClick={() => setPage((p) => Math.min(data.totalPages, p + 1))}
-            >
-              Next
-            </Pagination.Next>
-          </Pagination>
-        </div>
-      )}
     </Container>
   );
 };

@@ -62,7 +62,6 @@ export const getProfile = async () => {
     const response = await axios.get(`${API}/api/v1/auth/profile`, {
       withCredentials: true, // Ensure cookies are sent with the request
     });
-    console.log(response.data);
     return response.data;
   } catch (error) {
     throw new Error(

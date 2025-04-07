@@ -1,12 +1,13 @@
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "../context/auth-context";
 import { CheckBadgeIcon } from "@heroicons/react/24/outline";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 export default function Navbar() {
   const { user, logoutUser } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const location = useLocation();
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -18,10 +19,12 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const showProfile = user && location.pathname === "/task";
+  const showAuthButtons = !user && location.pathname !== "/task";
+
   return (
     <nav className="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
       <div className="container-fluid">
-        {/* Logo - always visible */}
         <Link
           className="navbar-brand"
           to={user ? "/task" : "/"}
@@ -51,10 +54,8 @@ export default function Navbar() {
           </div>
         </Link>
 
-        {/* Right side content */}
         <div className="d-flex align-items-center">
-          {/* Profile dropdown - shown only when logged in */}
-          {user ? (
+          {showProfile && (
             <div className="position-relative" ref={dropdownRef}>
               <button
                 className="btn d-flex align-items-center gap-2"
@@ -104,8 +105,8 @@ export default function Navbar() {
                 </button>
               </div>
             </div>
-          ) : (
-            /* Login/Signup buttons - shown when not logged in */
+          )}
+          {showAuthButtons && (
             <div className="d-flex gap-2">
               <Link
                 to="/login"

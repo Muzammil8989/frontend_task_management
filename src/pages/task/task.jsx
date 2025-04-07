@@ -209,6 +209,88 @@ const TaskList = () => {
       </div>
     );
 
+  if (!isLoading && !isError && data?.tasks?.length === 0) {
+    return (
+      <Container className="task-manager-container">
+        {/* Success Toast Notification */}
+        <Toast
+          show={showToast}
+          onClose={() => setShowToast(false)}
+          className="position-fixed top-0 end-0 m-3"
+          bg="success"
+          delay={3000}
+          autohide
+        >
+          <Toast.Header closeButton={false}>
+            <strong className="me-auto">Success</strong>
+          </Toast.Header>
+          <Toast.Body className="text-white">{toastMessage}</Toast.Body>
+        </Toast>
+
+        <div className="task-controls mb-4">
+          <div className="d-flex flex-column flex-md-row gap-3">
+            <div className="flex-grow-1 position-relative">
+              <FaSearch className="position-absolute top-50 start-0 translate-middle-y ms-3 text-muted" />
+              <Form.Control
+                type="search"
+                placeholder="Search tasks..."
+                className="task-search shadow-sm ps-5"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            <div style={{ width: "200px" }}>
+              <Form.Select
+                className="status-filter shadow-sm"
+                value={statusFilter}
+                onChange={(e) => {
+                  setStatusFilter(e.target.value);
+                  setPage(1);
+                }}
+              >
+                <option value="">All Statuses</option>
+                <option>To Do</option>
+                <option>In Progress</option>
+                <option>Done</option>
+              </Form.Select>
+            </div>
+            <Button
+              variant="primary"
+              onClick={() => setShowCreateModal(true)}
+              className="create-task-btn d-flex align-items-center"
+            >
+              <FaPlus className="me-2" />
+              Create Task
+            </Button>
+          </div>
+        </div>
+
+        <div className="no-records-found text-center py-5">
+          <FaSearch className="display-4 text-muted mb-3" />
+          <h4>No tasks found</h4>
+          <p className="text-muted">
+            {debouncedSearch || statusFilter
+              ? "No tasks match your search or filter criteria"
+              : "You don't have any tasks yet"}
+          </p>
+          <Button
+            variant="primary"
+            onClick={() => {
+              setSearchQuery("");
+              setStatusFilter("");
+              setPage(1);
+            }}
+            className="mt-3"
+          >
+            {debouncedSearch || statusFilter
+              ? "Clear filters"
+              : "Create a task"}
+          </Button>
+        </div>
+      </Container>
+    );
+  }
+
   return (
     <Container className="task-manager-container">
       {/* Success Toast Notification */}
@@ -326,9 +408,13 @@ const TaskList = () => {
                         size="sm"
                         className="me-2 d-flex align-items-center"
                         onClick={() => handleStatusUpdate(task)}
-                        disabled={updateTaskMutation.isPending}
+                        disabled={
+                          updateTaskMutation.isPending &&
+                          updateTaskMutation.variables?._id === task._id
+                        }
                       >
-                        {updateTaskMutation.isPending ? (
+                        {updateTaskMutation.isPending &&
+                        updateTaskMutation.variables?._id === task._id ? (
                           <>
                             <Spinner
                               animation="border"
@@ -352,20 +438,54 @@ const TaskList = () => {
                       size="sm"
                       className="d-flex align-items-center"
                       onClick={() => handleEditClick(task)}
-                      disabled={updateTaskMutation.isPending}
+                      disabled={
+                        updateTaskMutation.isPending &&
+                        updateTaskMutation.variables?._id === task._id
+                      }
                     >
-                      <FaEdit className="me-1" />
-                      Edit
+                      {updateTaskMutation.isPending &&
+                      updateTaskMutation.variables?._id === task._id ? (
+                        <>
+                          <Spinner
+                            animation="border"
+                            size="sm"
+                            className="me-2"
+                          />
+                          Editing...
+                        </>
+                      ) : (
+                        <>
+                          <FaEdit className="me-1" />
+                          Edit
+                        </>
+                      )}
                     </Button>
                     <Button
                       variant="outline-danger"
                       size="sm"
                       className="d-flex align-items-center"
                       onClick={() => handleDeleteClick(task)}
-                      disabled={deleteTaskMutation.isPending}
+                      disabled={
+                        deleteTaskMutation.isPending &&
+                        deleteTaskMutation.variables === task._id
+                      }
                     >
-                      <FaTrash className="me-1" />
-                      Delete
+                      {deleteTaskMutation.isPending &&
+                      deleteTaskMutation.variables === task._id ? (
+                        <>
+                          <Spinner
+                            animation="border"
+                            size="sm"
+                            className="me-2"
+                          />
+                          Deleting...
+                        </>
+                      ) : (
+                        <>
+                          <FaTrash className="me-1" />
+                          Delete
+                        </>
+                      )}
                     </Button>
                   </div>
                 </div>

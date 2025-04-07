@@ -47,6 +47,7 @@ const TaskList = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
+  const [toastVariant, setToastVariant] = useState("success"); // 'success' or 'danger'
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState(null);
   const [editedData, setEditedData] = useState({
@@ -72,8 +73,9 @@ const TaskList = () => {
     search: debouncedSearch,
   });
 
-  const showSuccessToast = (message) => {
+  const showToastMessage = (message, variant = "success") => {
     setToastMessage(message);
+    setToastVariant(variant);
     setShowToast(true);
     setTimeout(() => setShowToast(false), 3000);
   };
@@ -85,11 +87,13 @@ const TaskList = () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
       setShowCreateModal(false);
       setEditedData({ title: "", description: "", status: "To Do" });
-      showSuccessToast("Task created successfully!");
+      showToastMessage("Task created successfully!");
     },
-    onError: () => {
-      setToastMessage("Failed to create task");
-      setShowToast(true);
+    onError: (error) => {
+      showToastMessage(
+        error.response?.data?.message || "Failed to create task",
+        "danger"
+      );
     },
   });
 
@@ -99,11 +103,13 @@ const TaskList = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
       setEditingTask(null);
-      showSuccessToast("Task updated successfully!");
+      showToastMessage("Task updated successfully!");
     },
-    onError: () => {
-      setToastMessage("Failed to update task");
-      setShowToast(true);
+    onError: (error) => {
+      showToastMessage(
+        error.response?.data?.message || "Failed to update task",
+        "danger"
+      );
     },
   });
 
@@ -112,14 +118,15 @@ const TaskList = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
       setShowDeleteModal(false);
-      showSuccessToast("Task deleted successfully!");
+      showToastMessage("Task deleted successfully!");
     },
-    onError: () => {
-      setToastMessage("Failed to delete task");
-      setShowToast(true);
+    onError: (error) => {
+      showToastMessage(
+        error.response?.data?.message || "Failed to delete task",
+        "danger"
+      );
     },
   });
-
   // Edit handlers
   const handleEditClick = (task) => {
     setEditingTask(task);
@@ -217,12 +224,14 @@ const TaskList = () => {
           show={showToast}
           onClose={() => setShowToast(false)}
           className="position-fixed top-0 end-0 m-3"
-          bg="success"
+          bg={toastVariant}
           delay={3000}
           autohide
         >
           <Toast.Header closeButton={false}>
-            <strong className="me-auto">Success</strong>
+            <strong className="me-auto">
+              {toastVariant === "success" ? "Success" : "Error"}
+            </strong>
           </Toast.Header>
           <Toast.Body className="text-white">{toastMessage}</Toast.Body>
         </Toast>

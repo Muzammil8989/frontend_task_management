@@ -75,7 +75,7 @@ Before getting started, ensure you have the following installed:
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/frontend_task_management.git
+git clone https://github.com/Muzammil8989/frontend_task_management.git
 cd frontend_task_management
 npm install
 # or

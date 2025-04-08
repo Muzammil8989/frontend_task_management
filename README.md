@@ -82,7 +82,7 @@ npm install
 yarn install
 ```
 
-### 2.  Environment Configuration
+### 2.  Environment Configuration (Backend)
 VITE_BASE_URL=http://your-api-url.com
 
 ### 3.  Run the Development Server

@@ -17,6 +17,8 @@ import {
   Spinner,
   Toast,
   Alert,
+  OverlayTrigger,
+  Tooltip,
 } from "react-bootstrap"
 import {
   FaSearch,
@@ -29,6 +31,13 @@ import {
   FaCheckCircle,
   FaSpinner,
   FaExclamationTriangle,
+  FaCalendarAlt,
+  FaFilter,
+  FaCalendarCheck,
+  FaSortAmountDown,
+  FaSortAmountUp,
+  FaCalendarTimes,
+  FaCalendarDay,
 } from "react-icons/fa"
 import "./task.css"
 
@@ -38,6 +47,45 @@ export const useTasks = (params) => {
     queryFn: () => taskService.getTasks(params),
     keepPreviousData: true,
   })
+}
+
+// Format date with time
+const formatDateTime = (dateString) => {
+  const date = new Date(dateString)
+  return new Intl.DateTimeFormat("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date)
+}
+
+// Format date only
+const formatDate = (dateString) => {
+  const date = new Date(dateString)
+  return new Intl.DateTimeFormat("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  }).format(date)
+}
+
+// Get relative time (e.g., "2 days ago", "just now")
+const getRelativeTime = (dateString) => {
+  const date = new Date(dateString)
+  const now = new Date()
+  const diffTime = Math.abs(now - date)
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+  const diffHours = Math.floor(diffTime / (1000 * 60 * 60))
+  const diffMinutes = Math.floor(diffTime / (1000 * 60))
+
+  if (diffMinutes < 1) return "just now"
+  if (diffMinutes < 60) return `${diffMinutes} minute${diffMinutes !== 1 ? "s" : ""} ago`
+  if (diffHours < 24) return `${diffHours} hour${diffHours !== 1 ? "s" : ""} ago`
+  if (diffDays < 7) return `${diffDays} day${diffDays !== 1 ? "s" : ""} ago`
+
+  return formatDate(dateString)
 }
 
 const TaskList = () => {
@@ -53,10 +101,14 @@ const TaskList = () => {
   const [toastVariant, setToastVariant] = useState("success")
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [taskToDelete, setTaskToDelete] = useState(null)
+  const [deadlineFilter, setDeadlineFilter] = useState("")
+  const [sortBy, setSortBy] = useState("createdAt")
+  const [sortOrder, setSortOrder] = useState("desc")
   const [editedData, setEditedData] = useState({
     title: "",
     description: "",
     status: "To Do",
+    deadline: new Date(Date.now() + 86400000).toISOString().split("T")[0], // Default to tomorrow
   })
 
   // Debounce search input
@@ -74,6 +126,9 @@ const TaskList = () => {
     limit: 9,
     status: statusFilter,
     search: debouncedSearch,
+    deadline: deadlineFilter,
+    sortBy,
+    sortOrder,
   })
 
   const showToastMessage = (message, variant = "success") => {
@@ -89,7 +144,12 @@ const TaskList = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] })
       setShowCreateModal(false)
-      setEditedData({ title: "", description: "", status: "To Do" })
+      setEditedData({
+        title: "",
+        description: "",
+        status: "To Do",
+        deadline: new Date(Date.now() + 86400000).toISOString().split("T")[0],
+      })
       showToastMessage("Task created successfully!")
     },
     onError: (error) => {
@@ -103,6 +163,7 @@ const TaskList = () => {
         title: updatedTask.title,
         description: updatedTask.description,
         status: updatedTask.status,
+        deadline: updatedTask.deadline,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] })
@@ -147,6 +208,9 @@ const TaskList = () => {
       title: task.title,
       description: task.description,
       status: task.status,
+      deadline: task.deadline
+        ? new Date(task.deadline).toISOString().split("T")[0]
+        : new Date(Date.now() + 86400000).toISOString().split("T")[0],
     })
   }
 
@@ -208,7 +272,91 @@ const TaskList = () => {
     }
   }
 
-  // Animation variants
+  const getDeadlineStatus = (deadline) => {
+    if (!deadline) return null
+
+    const deadlineDate = new Date(deadline)
+    const today = new Date()
+
+    today.setHours(0, 0, 0, 0)
+    const deadlineDateOnly = new Date(deadlineDate)
+    deadlineDateOnly.setHours(0, 0, 0, 0)
+
+
+    const isToday = deadlineDateOnly.getTime() === today.getTime()
+
+
+    const isPast = deadlineDateOnly < today
+
+    return { isToday, isPast }
+  }
+
+  const getDeadlineClass = (deadline) => {
+    if (!deadline) return ""
+
+    const status = getDeadlineStatus(deadline)
+
+    if (status.isPast) return "deadline-overdue"
+    if (status.isToday) return "deadline-today"
+
+    // Calculate days until deadline
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const deadlineDate = new Date(deadline)
+    deadlineDate.setHours(0, 0, 0, 0)
+
+    const diffTime = Math.abs(deadlineDate - today)
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+
+    if (diffDays <= 3) return "deadline-soon" // Within 3 days
+    if (diffDays <= 7) return "deadline-upcoming" // Within a week
+
+    return "deadline-future"
+  }
+
+  const getCardBorderColor = (task) => {
+    // If task is completed, keep the success border
+    if (task.status === "Done") return "success"
+
+    // If no deadline, assign a default color based on status
+    if (!task.deadline) {
+      return task.status === "In Progress" ? "warning" : "primary"
+    }
+
+    const { isToday, isPast } = getDeadlineStatus(task.deadline)
+
+    if (isPast) return "danger"
+    if (isToday) return "warning"
+
+  
+    const idSum = task._id.split("").reduce((sum, char) => sum + char.charCodeAt(0), 0)
+    const colors = ["primary", "info", "secondary", "dark"]
+    return colors[idSum % colors.length]
+  }
+
+  const getDeadlineIcon = (deadline) => {
+    if (!deadline) return <FaCalendarAlt className="me-1" />
+
+    const status = getDeadlineStatus(deadline)
+
+    if (status.isPast) return <FaCalendarTimes className="me-1 text-danger" />
+    if (status.isToday) return <FaCalendarDay className="me-1 text-warning" />
+
+    return <FaCalendarCheck className="me-1 text-success" />
+  }
+
+  
+  const resetFilters = () => {
+    setSearchQuery("")
+    setDebouncedSearch("")
+    setStatusFilter("")
+    setDeadlineFilter("")
+    setSortBy("createdAt")
+    setSortOrder("desc")
+    setPage(1)
+  }
+
+  
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -295,69 +443,207 @@ const TaskList = () => {
       <AnimatePresence>
         {showToast && (
           <motion.div
-            className="position-fixed top-0 end-0 m-3 z-index-toast"
-            variants={toastVariants}
+            className="position-fixed top-0 end-0 p-3"
+            style={{
+              zIndex: 9999, 
+              pointerEvents: 'none' 
+            }}
+            variants={{
+              hidden: { opacity: 0, y: -20 },
+              visible: { opacity: 1, y: 0 },
+              exit: { opacity: 0, x: 50 }
+            }}
             initial="hidden"
             animate="visible"
             exit="exit"
+            transition={{ duration: 0.3, type: 'spring', damping: 25 }}
           >
-            <Toast onClose={() => setShowToast(false)} bg={toastVariant} delay={3000} autohide className="modern-toast">
-              <Toast.Header closeButton={false}>
-                <strong className="me-auto">{toastVariant === "success" ? "Success" : "Error"}</strong>
+            <Toast
+              onClose={() => setShowToast(false)}
+              bg={toastVariant}
+              delay={3000}
+              autohide
+              className="modern-toast"
+              style={{
+                pointerEvents: 'auto',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
+              }}
+            >
+              <Toast.Header
+                closeButton={false}
+                className={`bg-${toastVariant} text-white border-bottom-0`}
+              >
+                <strong className="me-auto">
+                  {toastVariant === "success" ? (
+                    <FaCheckCircle className="me-2" />
+                  ) : (
+                    <FaExclamationTriangle className="me-2" />
+                  )}
+                  {toastVariant === "success" ? "Success" : "Error"}
+                </strong>
+                <button
+                  type="button"
+                  className="btn-close btn-close-white"
+                  onClick={() => setShowToast(false)}
+                  aria-label="Close"
+                />
               </Toast.Header>
-              <Toast.Body className="text-white">{toastMessage}</Toast.Body>
+              <Toast.Body className="text-white">
+                <div className="d-flex align-items-center">
+                  {toastVariant === "success" ? (
+                    <FaCheck className="me-2 flex-shrink-0" />
+                  ) : (
+                    <FaExclamationCircle className="me-2 flex-shrink-0" />
+                  )}
+                  <span>{toastMessage}</span>
+                </div>
+              </Toast.Body>
             </Toast>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Controls Section */}
+
       <motion.div
-        className="task-controls mb-4"
+        className="task-controls mb-4 mt-3"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <div className="d-flex flex-column flex-md-row gap-3">
-          <div className="flex-grow-1 position-relative">
-            <FaSearch className="position-absolute top-50 start-0 translate-middle-y ms-3 text-muted" />
-            <Form.Control
-              type="search"
-              placeholder="Search tasks..."
-              className="task-search ps-5"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+        <div className="d-flex flex-column gap-3">
+
+          <div className="d-flex flex-column flex-md-row gap-3">
+            <div className="flex-grow-1 position-relative">
+              <FaSearch className="position-absolute top-50 start-0 translate-middle-y ms-3 text-muted" />
+              <Form.Control
+                type="search"
+                placeholder="Search tasks..."
+                className="task-search ps-5"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+              <Button
+                variant="primary"
+                onClick={() => setShowCreateModal(true)}
+                className="create-task-btn d-flex align-items-center"
+              >
+                <FaPlus className="me-2" />
+                Create Task
+              </Button>
+            </motion.div>
           </div>
-          <div style={{ width: "200px" }}>
-            <Form.Select
-              className="status-filter"
-              value={statusFilter}
-              onChange={(e) => {
-                setStatusFilter(e.target.value)
-                setPage(1)
-              }}
-            >
-              <option value="">All Statuses</option>
-              <option>To Do</option>
-              <option>In Progress</option>
-              <option>Done</option>
-            </Form.Select>
+
+
+          <div className="d-flex flex-column flex-md-row gap-3">
+
+            <div className="filter-group">
+              <Form.Select
+                className="status-filter"
+                value={statusFilter}
+                onChange={(e) => {
+                  setStatusFilter(e.target.value)
+                  setPage(1)
+                }}
+              >
+                <option value="">All Statuses</option>
+                <option>To Do</option>
+                <option>In Progress</option>
+                <option>Done</option>
+              </Form.Select>
+            </div>
+
+
+            <div className="filter-group">
+              <Form.Select
+                className="deadline-filter"
+                value={deadlineFilter}
+                onChange={(e) => {
+                  setDeadlineFilter(e.target.value)
+                  setPage(1)
+                }}
+              >
+                <option value="">All Deadlines</option>
+                <option value="upcoming">Upcoming</option>
+                <option value="past">Past</option>
+              </Form.Select>
+            </div>
+
+
+            <div className="d-flex gap-2 ms-md-auto">
+              <div className="filter-group">
+                <Form.Select
+                  className="sort-by-filter"
+                  value={sortBy}
+                  onChange={(e) => {
+                    setSortBy(e.target.value)
+                    setPage(1)
+                  }}
+                >
+                  <option value="createdAt">Sort by: Created</option>
+                  <option value="deadline">Sort by: Deadline</option>
+                  <option value="title">Sort by: Title</option>
+                </Form.Select>
+              </div>
+
+              <Button
+                variant="outline-secondary"
+                className="sort-order-btn"
+                onClick={() => {
+                  setSortOrder(sortOrder === "asc" ? "desc" : "asc")
+                  setPage(1)
+                }}
+              >
+                {sortOrder === "asc" ? <FaSortAmountUp /> : <FaSortAmountDown />}
+              </Button>
+
+
+              {(searchQuery || statusFilter || deadlineFilter || sortBy !== "createdAt" || sortOrder !== "desc") && (
+                <Button variant="outline-danger" onClick={resetFilters} className="reset-filters-btn">
+                  <FaTimes className="me-1" />
+                </Button>
+              )}
+            </div>
           </div>
-          <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-            <Button
-              variant="primary"
-              onClick={() => setShowCreateModal(true)}
-              className="create-task-btn d-flex align-items-center"
-            >
-              <FaPlus className="me-2" />
-              Create Task
-            </Button>
-          </motion.div>
+
+
+          {(searchQuery || statusFilter || deadlineFilter || sortBy !== "createdAt" || sortOrder !== "desc") && (
+            <div className="active-filters p-2 rounded-3">
+              <small className="text-muted d-flex align-items-center">
+                <FaFilter className="me-1" /> Active filters:
+                {searchQuery && (
+                  <Badge bg="light" text="dark" className="ms-2 filter-badge">
+                    Search: {searchQuery}
+                  </Badge>
+                )}
+                {statusFilter && (
+                  <Badge bg="light" text="dark" className="ms-2 filter-badge">
+                    Status: {statusFilter}
+                  </Badge>
+                )}
+                {deadlineFilter && (
+                  <Badge bg="light" text="dark" className="ms-2 filter-badge">
+                    Deadline: {deadlineFilter === "upcoming" ? "Upcoming" : "Past"}
+                  </Badge>
+                )}
+                {sortBy !== "createdAt" && (
+                  <Badge bg="light" text="dark" className="ms-2 filter-badge">
+                    Sort by: {sortBy === "deadline" ? "Deadline" : "Title"}
+                  </Badge>
+                )}
+                {sortOrder !== "desc" && (
+                  <Badge bg="light" text="dark" className="ms-2 filter-badge">
+                    Order: Ascending
+                  </Badge>
+                )}
+              </small>
+            </div>
+          )}
         </div>
       </motion.div>
 
-      {/* Content Section */}
+
       {data?.tasks?.length === 0 ? (
         <motion.div
           className="no-records-found text-center py-5"
@@ -368,7 +654,7 @@ const TaskList = () => {
           <FaSearch className="display-4 text-muted mb-3" />
           <h4>No tasks found</h4>
           <p className="text-muted">
-            {debouncedSearch || statusFilter
+            {debouncedSearch || statusFilter || deadlineFilter
               ? "No tasks match your search or filter criteria"
               : "You don't have any tasks yet"}
           </p>
@@ -376,14 +662,14 @@ const TaskList = () => {
             <Button
               variant="primary"
               onClick={() => {
-                setSearchQuery("")
-                setStatusFilter("")
-                setPage(1)
+                resetFilters()
                 setShowCreateModal(true)
               }}
               className="mt-3"
             >
-              {debouncedSearch || statusFilter ? "Clear filters and create task" : "Create your first task"}
+              {debouncedSearch || statusFilter || deadlineFilter
+                ? "Clear filters and create task"
+                : "Create your first task"}
             </Button>
           </motion.div>
         </motion.div>
@@ -395,7 +681,10 @@ const TaskList = () => {
                 {data?.tasks?.map((task) => (
                   <Col key={task._id} className="task-col">
                     <motion.div variants={taskVariants} layout whileHover={{ y: -5 }}>
-                      <Card className={`modern-task-card ${task.status === "Done" ? "completed-task" : ""}`}>
+                      <Card
+                        className={`modern-task-card border-${getCardBorderColor(task)} ${task.status === "Done" ? "completed-task" : ""}`}
+                        style={{ borderLeftWidth: "5px" }}
+                      >
                         <Card.Body className="task-card-body">
                           <div className="d-flex justify-content-between align-items-start mb-2">
                             <Card.Title
@@ -417,13 +706,73 @@ const TaskList = () => {
                           </div>
 
                           <div className="task-dates mb-3">
-                            <small className="text-muted">
-                              Created: {new Date(task.createdAt).toLocaleDateString()}
-                            </small>
-                            {task.updatedAt !== task.createdAt && (
-                              <small className="text-muted ms-2">
-                                Updated: {new Date(task.updatedAt).toLocaleDateString()}
-                              </small>
+                            <div className="date-badges">
+                              <OverlayTrigger
+                                placement="top"
+                                overlay={<Tooltip>{formatDateTime(task.createdAt)}</Tooltip>}
+                              >
+                                <Badge bg="light" text="dark" className="date-badge me-2">
+                                  <FaCalendarAlt className="me-1 text-primary" />
+                                  <span className="date-label">Created:</span> {getRelativeTime(task.createdAt)}
+                                </Badge>
+                              </OverlayTrigger>
+
+                              {task.updatedAt && task.updatedAt !== task.createdAt && (
+                                <OverlayTrigger
+                                  placement="top"
+                                  overlay={<Tooltip>{formatDateTime(task.updatedAt)}</Tooltip>}
+                                >
+                                  <Badge bg="light" text="dark" className="date-badge">
+                                    <FaEdit className="me-1 text-info" />
+                                    <span className="date-label">Updated:</span> {getRelativeTime(task.updatedAt)}
+                                  </Badge>
+                                </OverlayTrigger>
+                              )}
+                            </div>
+
+                            {task.deadline && (
+                              <div className={`deadline-indicator ${getDeadlineClass(task.deadline)} mt-2`}>
+                                {getDeadlineIcon(task.deadline)}
+                                <span className="fw-medium">{formatDate(task.deadline)}</span>
+                                {getDeadlineStatus(task.deadline)?.isPast && (
+                                  <span className="ms-2 badge bg-danger">OVERDUE</span>
+                                )}
+                                {getDeadlineStatus(task.deadline)?.isToday &&
+                                  !getDeadlineStatus(task.deadline)?.isPast && (
+                                    <span className="ms-2 badge bg-warning text-dark">TODAY</span>
+                                  )}
+                                {!getDeadlineStatus(task.deadline)?.isToday &&
+                                  !getDeadlineStatus(task.deadline)?.isPast && (
+                                    <OverlayTrigger
+                                      placement="top"
+                                      overlay={
+                                        <Tooltip>
+                                          {(() => {
+                                            const today = new Date()
+                                            today.setHours(0, 0, 0, 0)
+                                            const deadlineDate = new Date(task.deadline)
+                                            deadlineDate.setHours(0, 0, 0, 0)
+                                            const diffTime = Math.abs(deadlineDate - today)
+                                            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+                                            return `${diffDays} day${diffDays !== 1 ? "s" : ""} remaining`
+                                          })()}
+                                        </Tooltip>
+                                      }
+                                    >
+                                      <span className="ms-2 badge bg-info">
+                                        {(() => {
+                                          const today = new Date()
+                                          today.setHours(0, 0, 0, 0)
+                                          const deadlineDate = new Date(task.deadline)
+                                          deadlineDate.setHours(0, 0, 0, 0)
+                                          const diffTime = Math.abs(deadlineDate - today)
+                                          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+                                          return `${diffDays}d`
+                                        })()}
+                                      </span>
+                                    </OverlayTrigger>
+                                  )}
+                              </div>
                             )}
                           </div>
 
@@ -591,6 +940,17 @@ const TaskList = () => {
                     />
                   </Form.Group>
                   <Form.Group className="mb-3">
+                    <Form.Label>Deadline</Form.Label>
+                    <Form.Control
+                      type="date"
+                      name="deadline"
+                      value={editedData.deadline}
+                      onChange={handleInputChange}
+                      className="modern-input"
+                      min={new Date().toISOString().split("T")[0]}
+                    />
+                  </Form.Group>
+                  <Form.Group className="mb-3">
                     <Form.Label>Status</Form.Label>
                     <Form.Select
                       name="status"
@@ -670,6 +1030,17 @@ const TaskList = () => {
                       onChange={handleInputChange}
                       placeholder="Enter task description"
                       className="modern-input"
+                    />
+                  </Form.Group>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Deadline</Form.Label>
+                    <Form.Control
+                      type="date"
+                      name="deadline"
+                      value={editedData.deadline}
+                      onChange={handleInputChange}
+                      className="modern-input"
+                      min={new Date().toISOString().split("T")[0]}
                     />
                   </Form.Group>
                   <Form.Group className="mb-3">

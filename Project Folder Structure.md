@@ -1,0 +1,40 @@
+```
+└── 📁frontend_task_management
+    └── 📁public
+        └── _redirects
+        └── favicon.png
+    └── 📁src
+        └── App.jsx
+        └── 📁assets
+            └── 📁styles
+                └── main.css
+        └── 📁components
+            └── 📁form
+                └── form.jsx
+            └── navbar.jsx
+            └── protected-route.jsx
+        └── 📁context
+            └── auth-context.jsx
+        └── main.jsx
+        └── 📁pages
+            └── 📁auth
+                └── 📁login
+                    └── login.jsx
+                └── 📁signup
+                    └── signup.jsx
+            └── 📁task
+                └── task.css
+                └── task.jsx
+        └── routes.jsx
+        └── 📁services
+            └── auth-service.jsx
+            └── task-service.jsx
+    └── .env
+    └── .gitignore
+    └── eslint.config.js
+    └── index.html
+    └── package-lock.json
+    └── package.json
+    └── README.md
+    └── vite.config.js
+```
